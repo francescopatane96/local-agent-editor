@@ -1,0 +1,12 @@
+[
+  {
+    "title": "Titolo del post da importare",
+    "url": "https://www.linkedin.com/posts/INSERIRE-ID-REALE",
+    "author": "Nome autore",
+    "published_at": null,
+    "updated_at": null,
+    "text": "Testo o estratto che sei autorizzato a utilizzare",
+    "partial": true,
+    "language": "it"
+  }
+]

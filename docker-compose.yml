@@ -1,0 +1,37 @@
+services:
+
+  ai-news:
+    build: .
+
+    container_name: ai-tech-news
+
+    restart: unless-stopped
+
+    network_mode: host
+
+    volumes:
+      - ./data:/app/data
+
+    environment:
+      OLLAMA_URL: http://127.0.0.1:11434
+      OLLAMA_MODEL: qwen3.5:4b
+      TZ: Europe/Rome
+
+  ai-scheduler:
+    build: .
+
+    container_name: ai-tech-scheduler
+
+    restart: unless-stopped
+
+    network_mode: host
+
+    command: python -m app.scheduler
+
+    volumes:
+      - ./data:/app/data
+
+    environment:
+      OLLAMA_URL: http://127.0.0.1:11434
+      OLLAMA_MODEL: qwen3.5:4b
+      TZ: Europe/Rome

@@ -1,37 +1,34 @@
+x-app: &app
+  build: .
+  restart: unless-stopped
+  env_file: .env
+  user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  volumes:
+    - ./data:/app/data
+    - ./config:/app/config
+  environment:
+    DATA_DIR: /app/data
+    SEARXNG_URL: http://searxng:8080
+  init: true
+
 services:
-
   ai-news:
-    build: .
-
-    container_name: ai-tech-news
-
-    restart: unless-stopped
-
-    network_mode: host
-
-    volumes:
-      - ./data:/app/data
-
-    environment:
-      OLLAMA_URL: http://127.0.0.1:11434
-      OLLAMA_MODEL: qwen3.5:4b
-      TZ: Europe/Rome
-
+    <<: *app
+    ports:
+      - "127.0.0.1:8501:8501"
   ai-scheduler:
-    build: .
-
-    container_name: ai-tech-scheduler
-
+    <<: *app
+    command: ["python", "-m", "app.scheduler"]
+    depends_on:
+      - searxng
+  searxng:
+    image: "${SEARXNG_IMAGE:-searxng/searxng:latest}"
     restart: unless-stopped
-
-    network_mode: host
-
-    command: python -m app.scheduler
-
-    volumes:
-      - ./data:/app/data
-
     environment:
-      OLLAMA_URL: http://127.0.0.1:11434
-      OLLAMA_MODEL: qwen3.5:4b
-      TZ: Europe/Rome
+      SEARXNG_SECRET: "${SEARXNG_SECRET:?Run scripts/setup.py first}"
+    volumes:
+      - ./searxng/config/settings.yml:/etc/searxng/settings.yml:ro
+    ports:
+      - "127.0.0.1:8080:8080"

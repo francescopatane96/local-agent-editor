@@ -18,8 +18,10 @@ def load():
     ZoneInfo(cfg['timezone'])
     for key in ('start_time', 'delivery_time'):
         time.fromisoformat(cfg[key])
-    if cfg['start_time'] >= cfg['delivery_time']:
-        raise ValueError('start_time deve precedere delivery_time')
+    start=time.fromisoformat(cfg['start_time'])
+    delivery=time.fromisoformat(cfg['delivery_time'])
+    if (delivery.hour*60+delivery.minute)-(start.hour*60+start.minute)<15:
+        raise ValueError('Invio deve seguire avvio di almeno 15 minuti nello stesso giorno')
     if not 0 <= cfg['min_score'] <= 10:
         raise ValueError('min_score deve essere tra 0 e 10')
     if set(cfg['weights']) != {'relevance','novelty','evidence','utility'} or any(v < 0 for v in cfg['weights'].values()) or sum(cfg['weights'].values()) <= 0:

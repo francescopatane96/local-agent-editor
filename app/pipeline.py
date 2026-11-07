@@ -39,7 +39,10 @@ def execute(cfg,now=None,finalize=False,preview=False):
         run=rows(cfg,'SELECT * FROM runs WHERE started_at>=? ORDER BY id DESC LIMIT 1',(day_start,))
         if run and run[0]['state']=='finished' and not finalize:
             return run[0]
-        if not run or run[0]['state']=='collecting':
+        retry_collection=bool(run and run[0]['state']=='running'
+            and json.loads(run[0]['counts']).get('collection_attempts',1)<cfg['max_attempts']
+            and any(c['status']=='error' for c in json.loads(run[0]['coverage'])))
+        if not run or run[0]['state']=='collecting' or retry_collection:
             if run:
                 rid=run[0]['id']
             else:
@@ -49,6 +52,10 @@ def execute(cfg,now=None,finalize=False,preview=False):
                 counts,coverage=collect(cfg, min(deadline,time.monotonic()+cfg['collection_budget_seconds']) if not finalize else time.monotonic()+cfg['collection_budget_seconds'])
             else:
                 counts,coverage={},[{'source':'scheduler','status':'partial','detail':'Avvio tardivo, raccolta rinviata al ciclo successivo'}]
+            previous_counts=json.loads(run[0]['counts']) if run else {}
+            for k,v in previous_counts.items():
+                counts[k]=counts.get(k,0)+v
+            counts['collection_attempts']=previous_counts.get('collection_attempts',0)+1
             with connect(cfg) as db:
                 db.execute("UPDATE runs SET state='running',counts=?,coverage=? WHERE id=?",(json.dumps(counts),json.dumps(coverage),rid))
         else:

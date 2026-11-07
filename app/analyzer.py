@@ -93,6 +93,10 @@ def analyze_pending(cfg, deadline=None):
                         pass  # The report explicitly labels the retained excerpt.
                 if not item['text']:
                     raise ValueError('Nessun testo disponibile')
+                if len(item['text']) > cfg['article_chars']:
+                    item['partial']=1
+                    with connect(cfg) as db:
+                        db.execute('UPDATE items SET partial=1 WHERE id=?',(item['id'],))
                 prompt = '''Seleziona solo biotecnologie, bioinformatica, strumenti R/Python/Bioconductor per biologia,
 AI applicata alla biologia, startup biotech e innovazione industriale biologica. Escludi tecnologia generica.
 Distingui fatti documentati da ipotesi, preprint da risultati revisionati, pubblicità da evidenze.

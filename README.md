@@ -47,7 +47,7 @@ Tutti gli orari sono in `Europe/Rome`, con ora legale gestita mediante `zoneinfo
 | Lunedì, alla chiusura | Salvataggio del report della settimana precedente e sintesi dei trend |
 | 07:00 | Invio dei report, se email configurata, verificata e abilitata |
 
-Lo scheduler controlla ogni minuto. L'obiettivo è consegnare intorno alle 07:00, ma disponibilità di rete, hardware, server SMTP e riavvii non permettono una garanzia assoluta dell'orario. I timeout limitano il lavoro, le analisi residue passano al ciclo successivo. Se il computer è spento alle 07:00, il report viene preparato e inviato dopo il riavvio, con copertura parziale dichiarata. Non vengono inventate edizioni complete per giorni interamente persi.
+Lo scheduler controlla ogni minuto. Le fonti in errore vengono ritentate fino al limite configurato durante la notte. L'obiettivo è consegnare intorno alle 07:00, ma disponibilità di rete, hardware, server SMTP e riavvii non permettono una garanzia assoluta dell'orario. I timeout limitano il lavoro, le analisi residue passano al ciclo successivo. Se il computer è spento alle 07:00, il report viene preparato e inviato dopo il riavvio, con copertura parziale dichiarata. Non vengono inventate edizioni complete per giorni interamente persi.
 
 La pipeline usa un lock di processo condiviso tra comandi e scheduler. Il sistema riprende una raccolta interrotta e rimette in coda analisi interrotte. Le attività sono persistite in SQLite. Non eseguire copie concorrenti dello stack con database o directory di lock diversi sulla stessa raccolta.
 

@@ -317,5 +317,28 @@ class ObservatoryTests(unittest.TestCase):
             check_public('file:///etc/passwd')
 
 
+    def test_truncated_prompt_is_marked_partial(self):
+        self.cfg['article_chars']=20
+        item=self.add(text='Complete content '*30)
+        with connect(self.cfg) as db:
+            db.execute('UPDATE items SET partial=0 WHERE id=?',(item['id'],))
+        with patch('app.analyzer.generate',return_value=analysis()):
+            analyze_pending(self.cfg)
+        self.assertEqual(rows(self.cfg,'SELECT partial FROM items')[0]['partial'],1)
+
+    def test_failed_collection_is_retried_and_counts_preserved(self):
+        now=datetime.now(timezone.utc)
+        with connect(self.cfg) as db:
+            db.execute("INSERT INTO runs(started_at,state,counts,coverage) VALUES(?,'running',?,?)",
+                (now.isoformat(),json.dumps({'new':2,'collection_attempts':1}),
+                 json.dumps([{'source':'feed','status':'error'}])))
+        with patch('app.pipeline.collect',return_value=({'new':1},[{'source':'feed','status':'ok'}])) as collect_mock, patch('app.pipeline.analyze_pending',return_value={}):
+            execute(self.cfg,now=now,finalize=True)
+            collect_mock.assert_called_once()
+        counts=json.loads(rows(self.cfg,'SELECT counts FROM runs')[0]['counts'])
+        self.assertEqual(counts['new'],3)
+        self.assertEqual(counts['collection_attempts'],2)
+
+
 if __name__=='__main__':
     unittest.main()

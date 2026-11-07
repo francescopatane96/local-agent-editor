@@ -133,8 +133,8 @@ else:
                     raise ValueError('Ogni fonte richiede name e url')
                 for feed in parsed:
                     canonical(feed['url'])
-                if start>=delivery or delivery.hour==0:
-                    raise ValueError('Invio deve seguire avvio, con margine per la chiusura')
+                if (delivery.hour*60+delivery.minute)-(start.hour*60+start.minute)<15:
+                    raise ValueError('Invio deve seguire avvio di almeno 15 minuti nello stesso giorno')
                 path=Path(os.getenv('OBS_CONFIG',ROOT/'config/observatory.json'))
                 settings=json.loads(path.read_text())
                 settings.update(start_time=start.strftime('%H:%M'),delivery_time=delivery.strftime('%H:%M'),
